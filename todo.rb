@@ -8,6 +8,24 @@ configure do
   set :session_secret, 'secret'
 end
 
+helpers do
+  def list_complete?(list)
+    todo_count(list) > 0 && remaining_todo_count(list) == 0
+  end
+  
+  def list_class(list)
+    "complete" if list_complete?(list)
+  end
+  
+  def todo_count(list)
+    list[:todos].size
+  end
+  
+  def remaining_todo_count(list)
+    list[:todos].count { |todo| !todo[:completed] }
+  end
+end
+
 before do
   session[:lists] ||= []
 end
@@ -92,8 +110,6 @@ end
 def error_for_todo_name(list, todo_name)
   if !(1..100).cover? todo_name.size then
     "Todo must be between 1 and 100 characters."
-  # elsif list[:todos].any? { |todo| todo[:name] == todo_name }
-  #   "Todo name must be unique."
   end
 end
 
@@ -114,10 +130,29 @@ post '/lists/:list_id/todos' do
   end
 end
 
+# Delete a todo from a list
 post '/lists/:list_id/todos/:todo_id/delete' do
   list_id = params[:list_id].to_i
   todo_id = params[:todo_id].to_i
   session[:lists][list_id][:todos].delete_at(todo_id)
   session[:success] = "The todo has been deleted."
+  redirect "/lists/#{list_id}"
+end
+
+# Check all todos in a list complete
+post "/lists/:list_id/complete" do
+  list_id = params[:list_id].to_i
+  session[:lists][list_id][:todos].each { |todo| todo[:completed] = true }
+  session[:success] = "All todos marked complete."
+  redirect "/lists/#{list_id}"
+end
+
+# Toggle a todo complete/uncomplete
+post '/lists/:list_id/todos/:todo_id' do
+  list_id = params[:list_id].to_i
+  todo_id = params[:todo_id].to_i
+  todo = session[:lists][list_id][:todos][todo_id]
+  todo[:completed] = params[:completed] == 'true'
+  session[:success] = "The todo has been updated."
   redirect "/lists/#{list_id}"
 end
