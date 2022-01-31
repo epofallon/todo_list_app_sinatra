@@ -13,7 +13,7 @@
   </header>
   
   <ul>
-    <% @list[:todos].each_with_index do |todo, idx| %>
+    <% order_todos(@list[:todos]) do |todo, idx| %>
       <li <%= todo[:completed] ? 'class="complete"' : ''%>>
         
         <form action="/lists/<%= @list_id %>/todos/<%= idx %>" method="post" class="check">

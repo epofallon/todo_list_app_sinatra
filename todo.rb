@@ -24,6 +24,16 @@ helpers do
   def remaining_todo_count(list)
     list[:todos].count { |todo| !todo[:completed] }
   end
+  
+  def order_lists(lists)
+    sorted_lists = lists.sort_by { |list| list_complete?(list) ? 1 : 0 }
+    sorted_lists.each { |list| yield list, lists.index(list) }
+  end
+  
+  def order_todos(todos)
+    sorted_todos = todos.sort_by { |todo| todo[:completed] ? 1 : 0 }
+    sorted_todos.each { |todo| yield todo, todos.index(todo) }
+  end
 end
 
 before do
