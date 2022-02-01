@@ -14,7 +14,7 @@
   
   <ul>
     <% order_todos(@list[:todos]) do |todo, idx| %>
-      <li <%= todo[:completed] ? 'class="complete"' : ''%>>
+      <li <%== todo[:completed] ? 'class="complete"' : ''%>>
         
         <form action="/lists/<%= @list_id %>/todos/<%= idx %>" method="post" class="check">
           <input type="hidden" name="completed" value="<%= !todo[:completed] %>" />
