@@ -20,6 +20,7 @@ end
 helpers do
   def list_complete?(list)
     todo_count(list) > 0 && remaining_todo_count(list) == 0
+    # list[:todos_count] > 0 && list[:todos_remaining_count] == 0
   end
   
   def list_class(list)
@@ -27,11 +28,11 @@ helpers do
   end
   
   def todo_count(list)
-    list[:todos].size
+    list[:todos_count] || list[:todos].size
   end
   
   def remaining_todo_count(list)
-    list[:todos].count { |todo| !todo[:completed] }
+    list[:todos_remaining_count] || list[:todos].count { |todo| !todo[:completed] }
   end
   
   def order_lists(lists)
