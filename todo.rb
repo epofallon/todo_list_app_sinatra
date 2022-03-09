@@ -49,6 +49,10 @@ before do
   @storage = DatabasePersistence.new(logger)
 end
 
+after do
+  @storage.disconnect
+end
+
 def load_list(idx)
   list = @storage.find_list(idx)
   return list if list
