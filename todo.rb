@@ -1,21 +1,44 @@
+require 'rubygems'
+require 'bundler/setup'
 require "sinatra"
+require "mongoid"
 
 require "sinatra/content_for"
 require "tilt/erubis"
 
 require_relative "database_persistence"
 
+Mongoid.load!(File.join(File.dirname(__FILE__), 'config', 'mongoid.yml'))
+
 configure do
   enable :sessions
   set :session_secret, 'secret'
   set :erb, :escape_html => true
-  
 end
 
 configure(:development) do
   require "sinatra/reloader"
   also_reload "database_persistence.rb"
 end
+
+class Counts
+  include Mongoid::Document
+
+  field :listCount, type: Integer
+  field :todoCount, type: Integer
+end
+
+def increment_todo_count()
+  count = Counts.first
+  count.update(todoCount: count.todoCount + 1)
+end
+
+
+def increment_list_count()
+  count = Counts.first
+  count.update(listCount: count.listCount + 1)
+end
+
 
 helpers do
   def list_complete?(list)
@@ -95,6 +118,7 @@ post "/lists" do
   else
     
     @storage.create_new_list(list_name)
+    increment_list_count()
     session[:success] = "The list has been created."
     redirect "/lists"
   end
@@ -127,7 +151,6 @@ end
 # Delete a todo list
 post "/lists/:list_id/delete" do
   @storage.delete_list(params[:list_id].to_i)
-  
   session[:success] = "The list has been deleted."
   if env["HTTP_X_REQUESTED_WITH"] == "XMLHttpRequest"
     "/lists"
@@ -155,6 +178,7 @@ post '/lists/:list_id/todos' do
     erb :list, layout: :layout
   else
     @storage.create_new_todo(@list_id, todo_name)
+    increment_todo_count()
     session[:success] = "The todo was added."
     redirect "/lists/#{@list_id}"
   end
@@ -192,4 +216,9 @@ post '/lists/:list_id/todos/:todo_id' do
   
   session[:success] = "The todo has been updated."
   redirect "/lists/#{list_id}"
+end
+
+get '/metrics' do
+  @counts = Counts.first
+  erb :metrics, layout: :layout
 end
